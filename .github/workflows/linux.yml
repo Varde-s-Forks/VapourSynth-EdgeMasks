@@ -1,0 +1,59 @@
+name: Build & upload artifact (Linux)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  VAPOURSYNTH_VERSION: 73
+  PYTHON_VERSION: 3.14
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Set up VapourSynth ${{ env.VAPOURSYNTH_VERSION }}
+        uses: Jaded-Encoding-Thaumaturgy/setup-vapoursynth@v1
+        with:
+          vapoursynth-version: ${{ env.VAPOURSYNTH_VERSION }}
+
+      - name: Install Python packages
+        run: uv sync --only-dev --locked
+
+      - name: Build
+        run: |
+          uv run --only-dev meson setup build
+          uv run --only-dev ninja -C build
+
+      - name: Upload lib artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: vapoursynth_edgemasks-${{ runner.os }}-${{ runner.arch }}-lib
+          path: build/*.so
+          if-no-files-found: error
+
+      - name: Build wheel
+        run: uvx hatch build
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: vapoursynth_edgemasks-${{ runner.os }}-${{ runner.arch }}-dist
+          path: |
+            dist/*.tar.gz
+            dist/*.whl
+          if-no-files-found: error
