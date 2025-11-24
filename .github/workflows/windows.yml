@@ -1,0 +1,63 @@
+name: Build & upload artifact (Windows - MinGW)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: 3.14
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-vapoursynth
+            mingw-w64-ucrt-x86_64-uv
+
+      - name: Install Python packages
+        run: uv sync --only-dev --locked
+
+      - name: Build
+        env:
+          CC: gcc
+          CXX: g++
+        run: |
+          uv run --only-dev meson setup build
+          uv run --only-dev ninja -C build
+
+      - name: Upload lib artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: vapoursynth_edgemasks-${{ runner.os }}-${{ runner.arch }}-lib
+          path: |
+            build/*.dll
+          if-no-files-found: error
+
+      - name: Build wheel
+        run: uvx hatch build
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: vapoursynth_edgemasks-${{ runner.os }}-${{ runner.arch }}-dist
+          path: |
+            dist/*.tar.gz
+            dist/*.whl
+          if-no-files-found: error
