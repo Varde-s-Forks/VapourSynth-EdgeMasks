@@ -1,0 +1,60 @@
+name: Build & upload artifact (macOS)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: 3.14
+
+jobs:
+  build:
+    runs-on: macos-15-intel
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Set up VapourSynth
+        run: |
+          brew update
+          brew install vapoursynth
+
+      - name: Install Python packages
+        run: uv sync --only-dev --locked
+
+      - name: Build
+        run: |
+          uv run --only-dev meson setup build
+          uv run --only-dev ninja -C build
+
+      - name: Upload lib artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: vapoursynth_edgemasks-${{ runner.os }}-${{ runner.arch }}-lib
+          path: |
+            build/*.so
+            build/*.dylib
+          if-no-files-found: error
+
+      - name: Build wheel
+        run: uvx hatch build
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: vapoursynth_edgemasks-${{ runner.os }}-${{ runner.arch }}-dist
+          path: |
+            dist/*.tar.gz
+            dist/*.whl
+          if-no-files-found: error

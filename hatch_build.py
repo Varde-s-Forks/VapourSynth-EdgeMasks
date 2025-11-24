@@ -25,7 +25,7 @@ def get_artifact_name() -> str:
     if platform.startswith("linux"):
         return _ARTIFACTS["linux"]
 
-    if platform == "darwin":
+    if platform.startswith("macosx"):
         return _ARTIFACTS["macos"]
 
     raise NotImplementedError(f"Not implemented for this platform {platform}")
