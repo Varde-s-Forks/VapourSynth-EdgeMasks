@@ -110,6 +110,7 @@ dev = [
     { name = "hatchling" },
     { name = "meson" },
     { name = "ninja" },
+    { name = "packaging" },
 ]
 
 [package.metadata]
@@ -120,4 +121,5 @@ dev = [
     { name = "hatchling", specifier = ">=1.27.0" },
     { name = "meson", specifier = ">=1.9.1" },
     { name = "ninja", specifier = ">=1.13.0" },
+    { name = "packaging", specifier = ">=25.0" },
 ]

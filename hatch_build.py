@@ -5,6 +5,7 @@ from typing import Any
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 from hatchling.builders.wheel import WheelBuilderConfig
 from hatchling.metadata.plugin.interface import MetadataHookInterface
+from packaging import tags
 
 _ARTIFACTS = {
     "windows": "edgemasks.dll",
@@ -41,5 +42,5 @@ class CustomBuildHook(BuildHookInterface[WheelBuilderConfig]):
         artifact_name = get_artifact_name()
 
         build_data["extra_metadata"][f"build/{artifact_name}"] = artifact_name
-        build_data["infer_tag"] = True
         build_data["pure_python"] = False
+        build_data["tag"] = f"py3-none-{next(tags.platform_tags())}"
